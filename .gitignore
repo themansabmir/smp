@@ -1,0 +1,20 @@
+node_modules/
+dist/
+
+# Playwright outputs
+test-results/
+playwright-report/
+blob-report/
+.cache/
+
+# Local env overrides — never commit
+.env
+.env.local
+.env.*.local
+
+# Saved auth states (may contain tokens)
+playwright/.auth/*.json
+
+# OS
+.DS_Store
+Thumbs.db

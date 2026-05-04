@@ -1,0 +1,26 @@
+{
+  "name": "smp-automation",
+  "version": "1.0.0",
+  "description": "SMP end-to-end and API test automation suite",
+  "private": true,
+  "scripts": {
+    "test": "playwright test",
+    "test:dev": "playwright test --project=dev",
+    "test:staging": "playwright test --project=staging",
+    "test:prod": "playwright test --project=prod",
+    "test:e2e": "playwright test tests/e2e",
+    "test:api": "playwright test tests/api",
+    "test:headed": "playwright test --headed",
+    "test:debug": "playwright test --debug",
+    "report": "playwright show-report",
+    "codegen": "playwright codegen",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.44.0",
+    "@types/node": "^20.12.0",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.4.5",
+    "typescript": "^5.4.5"
+  }
+}
