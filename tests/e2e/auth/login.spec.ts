@@ -1,25 +1,31 @@
-import { test, expect } from '@src/fixtures';
+import { expect, test } from '@src/fixtures';
+
+const users = require('@tests/data/login-users.json');
 
 test.describe('Login', () => {
-  test('allows admin to log in with valid credentials', async ({ loginPage, dashboardPage, envConfig }) => {
+  test('allows a valid admin user to sign in', async ({ loginPage, dashboardPage, page }) => {
     await loginPage.goto();
-    await loginPage.loginWith(envConfig.credentials.admin);
+    await loginPage.loginWith(users.admin);
+    // Wait for navigation to participants page
+    await page.waitForURL(/.*invoicenow-participants.*/, { timeout: 30000 });
 
-    await expect(dashboardPage.page).toHaveURL(/.*dashboard.*/);
-    expect(await dashboardPage.isLoaded()).toBe(true);
+    await expect(dashboardPage.page).toHaveURL(/.*invoicenow-participants.*/);
   });
 
-  test('shows error message for invalid credentials', async ({ loginPage }) => {
+  test('allows a valid owner user to sign in', async ({ loginPage, dashboardPage, page }) => {
     await loginPage.goto();
-    await loginPage.loginWith({ email: 'wrong@example.com', password: 'wrongpassword' });
+    await loginPage.loginWith(users.owner);
+    // Wait for navigation to participants page
+    await page.waitForURL(/.*invoicenow-participants.*/, { timeout: 30000 });
 
+    await expect(dashboardPage.page).toHaveURL(/.*invoicenow-participants.*/);
+  });
+
+  test('shows an error message for invalid credentials', async ({ loginPage, page }) => {
+    await loginPage.goto();
+    await loginPage.loginWith(users.invalid);
+
+    await expect(page).toHaveURL(/.*login.*/);
     expect(await loginPage.isErrorVisible()).toBe(true);
-  });
-
-  test('allows standard user to log in', async ({ loginPage, dashboardPage, envConfig }) => {
-    await loginPage.goto();
-    await loginPage.loginWith(envConfig.credentials.standardUser);
-
-    await expect(dashboardPage.page).toHaveURL(/.*dashboard.*/);
   });
 });

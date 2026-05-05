@@ -1,0 +1,26 @@
+{
+  "corppass": {
+    "countryCode": "Singapore",
+    "participantName": "Test Corppass Company",
+    "participantIdentifierPrefix": "0195",
+    "participantIdentifierSuffix": "sguen123456",
+    "businessRepName": "John Doe",
+    "businessRepEmail": "john@example.com",
+    "verificationMethod": "Corppass Authorisation"
+  },
+  "pdf": {
+    "countryCode": "Singapore",
+    "participantName": "Test PDF Company",
+    "participantIdentifierPrefix": "0195",
+    "participantIdentifierSuffix": "abcem123456",
+    "businessRepName": "Jane Smith",
+    "businessRepEmail": "jane@example.com",
+    "verificationMethod": "PDF Authorisation"
+  },
+  "solutionProvider": {
+    "registeredUnder": "Solution Provider",
+    "solutionProviderName": "Test Solution Provider",
+    "countryCode": "Singapore",
+    "participantName": "SP Test Company"
+  }
+}
