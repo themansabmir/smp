@@ -45,8 +45,8 @@ export const test = base.extend<Fixtures>({
     await use(new ApiHelper(request as APIRequestContext, envConfig.apiBaseURL, envConfig.api.key));
   },
 
-  participantHelper: async ({ request, envConfig }, use) => {
-    await use(new ParticipantHelper(request as APIRequestContext, envConfig.apiBaseURL));
+  participantHelper: async ({ request, envConfig, page }, use) => {
+    await use(new ParticipantHelper(request as APIRequestContext, envConfig.apiBaseURL, page));
   },
 });
 

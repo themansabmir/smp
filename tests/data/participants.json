@@ -15,12 +15,16 @@
     "participantIdentifierSuffix": "abcem123456",
     "businessRepName": "Jane Smith",
     "businessRepEmail": "jane@example.com",
-    "verificationMethod": "PDF Authorisation"
+    "verificationMethod": "PDF Authorisation",
+    "pdfFilePath": "tests/data/pdfs/sample-document.pdf"
   },
   "solutionProvider": {
     "registeredUnder": "Solution Provider",
-    "solutionProviderName": "Test Solution Provider",
+    "solutionProviderName": "MT SP 01",
     "countryCode": "Singapore",
-    "participantName": "SP Test Company"
+    "participantName": "SP Test Company",
+    "participantIdentifierSuffix": "sp123456",
+    "businessRepName": "John Lee",
+    "businessRepEmail": "john@example.com"
   }
 }
