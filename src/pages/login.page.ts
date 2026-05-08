@@ -23,6 +23,8 @@ export class LoginPage extends BasePage {
     await this.emailInput.fill(credentials.email);
     await this.passwordInput.fill(credentials.password);
     await this.submitButton.click();
+    // Wait for the login to complete by waiting for URL change or a specific dashboard element
+    await this.page.waitForURL(url => !url.href.includes('/login'), { timeout: 15000 });
   }
 
   async getErrorMessage(): Promise<string | null> {
