@@ -1,30 +1,37 @@
 {
   "corppass": {
     "countryCode": "Singapore",
-    "participantName": "Test Corppass Company",
+    "participantName": "QA_CORP_HF11",
     "participantIdentifierPrefix": "0195",
-    "participantIdentifierSuffix": "sguen123456",
-    "businessRepName": "John Doe",
-    "businessRepEmail": "john@example.com",
+    "participantIdentifierSuffix": "SGUEN_HF11_999",
+    "businessRepName": "QA Admin",
+    "businessRepEmail": "qa@smp.sg",
     "verificationMethod": "Corppass Authorisation"
   },
   "pdf": {
     "countryCode": "Singapore",
-    "participantName": "Test PDF Company",
+    "participantName": "QA_PDF_HF12",
     "participantIdentifierPrefix": "0195",
-    "participantIdentifierSuffix": "abcem123456",
-    "businessRepName": "Jane Smith",
-    "businessRepEmail": "jane@example.com",
+    "participantIdentifierSuffix": "PDF_HF12_999",
+    "businessRepName": "QA Admin",
+    "businessRepEmail": "qa@smp.sg",
     "verificationMethod": "PDF Authorisation",
     "pdfFilePath": "tests/data/pdfs/sample-document.pdf"
   },
   "solutionProvider": {
     "registeredUnder": "Solution Provider",
-    "solutionProviderName": "MT SP 01",
+    "solutionProviderName": "MT SP 11",
     "countryCode": "Singapore",
-    "participantName": "SP Test Company",
-    "participantIdentifierSuffix": "sp123456",
-    "businessRepName": "John Lee",
-    "businessRepEmail": "john@example.com"
+    "participantName": "QA_SP_HF13",
+    "participantIdentifierSuffix": "SP_HF13_999",
+    "businessRepName": "QA Admin",
+    "businessRepEmail": "qa@smp.sg"
+  },
+  "xss": {
+    "countryCode": "Singapore",
+    "participantName": "<img src=x onerror=console.log('XSS_TRIGGERED')> SEC01",
+    "participantIdentifierSuffix": "XSS1123456",
+    "businessRepName": "XSS Tester",
+    "businessRepEmail": "xss@tester.com"
   }
 }

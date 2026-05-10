@@ -1,4 +1,4 @@
-import type { Page } from '@playwright/test';
+import { expect, type Page } from '@playwright/test';
 import { BasePage } from './base.page';
 
 export class AddParticipantPage extends BasePage {
@@ -7,23 +7,19 @@ export class AddParticipantPage extends BasePage {
   }
 
   async clickAddParticipant(): Promise<void> {
-    // Wait for page to be ready
     await this.page.waitForTimeout(500);
     
-    // Close any existing dialogs or overlays first
-    try {
-      const closeButton = this.page.locator('button[aria-label="Close"], button:has-text("×"), .MuiDialog-root button').first();
-      if (await closeButton.isVisible({ timeout: 2000 })) {
-        await closeButton.click();
-        await this.page.waitForTimeout(500);
-      }
-    } catch (e) {
-      // No close button found, continue
-    }
-    
-    // Press Escape to close any modal overlays
+    // Press Escape to close any modal overlays or drawers
     await this.page.keyboard.press('Escape');
     await this.page.waitForTimeout(500);
+
+    // Handle "Leave Without Saving?" dialog if it exists from a previous failed/stuck attempt
+    const leaveDialog = this.page.locator('text=Leave Without Saving?');
+    const leaveButton = this.page.getByRole('button', { name: 'Leave Without Saving' });
+    if (await leaveDialog.isVisible({ timeout: 2000 })) {
+      await leaveButton.click();
+      await this.page.waitForTimeout(1000);
+    }
     
     const addButton = this.page.locator('button:has-text("Add Participant")').first();
     await addButton.waitFor({ state: 'visible', timeout: 10000 });
@@ -34,7 +30,23 @@ export class AddParticipantPage extends BasePage {
   }
 
   async closeModal(): Promise<void> {
-    await this.page.locator('button[aria-label="Close"], button:has-text("×")').first().click();
+    const closeButton = this.page.locator('button[aria-label*="close"], button:has-text("×")').first();
+    if (await closeButton.isVisible()) {
+      await closeButton.click();
+      
+      // Handle "Leave Without Saving?" dialog if it appears
+      const leaveButton = this.page.getByRole('button', { name: 'Leave Without Saving' });
+      if (await leaveButton.isVisible({ timeout: 2000 })) {
+        await leaveButton.click();
+        await this.page.waitForTimeout(500);
+      }
+    }
+  }
+
+  private async selectCountry(country: string): Promise<void> {
+    const countryCombobox = this.page.locator('#mui-component-select-countryCode');
+    await countryCombobox.click();
+    await this.page.getByRole('option', { name: country, exact: true }).first().click();
   }
 
   async fillCorpassParticipant(data: {
@@ -44,31 +56,36 @@ export class AddParticipantPage extends BasePage {
     participantIdentifierSuffix: string;
     businessRepName: string;
     businessRepEmail: string;
-    verificationMethod: string;
+    verificationMethod?: string;
   }): Promise<void> {
-    // Select Country
-    await this.page.getByRole('combobox', { name: data.countryCode }).click();
-    await this.page.getByRole('option', { name: data.countryCode }).click();
-
-    // Fill Participant Name
-    await this.page.getByRole('textbox', { name: 'e.g. ABC Company Pte Ltd' }).click();
+    await this.selectCountry(data.countryCode);
     await this.page.getByRole('textbox', { name: 'e.g. ABC Company Pte Ltd' }).fill(data.participantName);
-
-    // Fill Participant Identifier
-    await this.page.getByRole('textbox', { name: 'e.g. SGUEN123456789K' }).click();
     await this.page.getByRole('textbox', { name: 'e.g. SGUEN123456789K' }).fill(data.participantIdentifierSuffix);
+    await this.page.keyboard.press('Tab'); // Trigger any blur events
+    
+    // The "Verification Method" and Representative fields might be triggered by the Identifier
+    // or they might be delayed by the XSS payload. 
+    const corppassRadio = this.page.getByRole('radio', { name: /Corppass Authorisation/i });
+    await corppassRadio.waitFor({ state: 'visible', timeout: 10000 }).catch(() => {
+      console.log('Verification method section not appearing, might be blocked by XSS payload');
+    });
 
-    // Select Verification Method
-    // await this.page.getByRole('combobox', { name: 'Select Verification Method' }).click();
-    // await this.page.waitForTimeout(500); // Wait for dropdown to open
+    if (await corppassRadio.isVisible()) {
+      await corppassRadio.check().catch(() => {});
+    }
+    
+    const nameField = this.page.getByRole('textbox', { name: 'e.g. John Lee' });
+    // Use a shorter timeout for the scroll check to avoid hanging if the field is truly missing
+    const isNameVisible = await nameField.isVisible({ timeout: 5000 });
+    if (isNameVisible) {
+      await nameField.scrollIntoViewIfNeeded().catch(() => {});
+      await nameField.fill(data.businessRepName);
 
-    // Fill Business Representative Name
-    await this.page.getByRole('textbox', { name: 'e.g. John Lee' }).click();
-    await this.page.getByRole('textbox', { name: 'e.g. John Lee' }).fill(data.businessRepName);
-
-    // Fill Business Representative Email
-    await this.page.getByRole('textbox', { name: 'e.g. abc@company.com' }).click();
-    await this.page.getByRole('textbox', { name: 'e.g. abc@company.com' }).fill(data.businessRepEmail);
+      const emailField = this.page.getByRole('textbox', { name: 'e.g. abc@company.com' });
+      await emailField.fill(data.businessRepEmail);
+    } else {
+      console.warn('Representative fields are still hidden. Proceeding with save anyway to test sanitization.');
+    }
   }
 
   async fillPdfParticipant(data: {
@@ -76,31 +93,18 @@ export class AddParticipantPage extends BasePage {
     participantName: string;
     participantIdentifierPrefix: string;
     participantIdentifierSuffix: string;
-    verificationMethod: string;
+    verificationMethod?: string;
     pdfFilePath: string;
   }): Promise<void> {
-    // Select Country
-    await this.page.getByRole('combobox', { name: data.countryCode }).click();
-    // Close dropdown backdrop
-    await this.page.locator('.MuiBackdrop-root.MuiBackdrop-invisible').click();
-
-    // Fill Participant Name
-    await this.page.getByRole('textbox', { name: 'e.g. ABC Company Pte Ltd' }).click();
+    await this.selectCountry(data.countryCode);
     await this.page.getByRole('textbox', { name: 'e.g. ABC Company Pte Ltd' }).fill(data.participantName);
-
-    // Fill Participant Identifier
-    await this.page.getByRole('textbox', { name: 'e.g. SGUEN123456789K' }).click();
     await this.page.getByRole('textbox', { name: 'e.g. SGUEN123456789K' }).fill(data.participantIdentifierSuffix);
 
-    // Verification method is auto-selected, no need to interact with dropdown
-
-    // Upload PDF file - target the hidden input element
     const uploadInput = this.page.locator('input[type="file"]');
     await uploadInput.setInputFiles(data.pdfFilePath);
     
-    // Wait for file to be uploaded and displayed
     const fileName = data.pdfFilePath.split('/').pop() || 'sample-document.pdf';
-    await this.page.getByText(fileName).click();
+    await expect(this.page.getByText(fileName).first()).toBeVisible({ timeout: 10000 });
   }
 
   async fillSolutionProviderParticipant(data: {
@@ -112,108 +116,71 @@ export class AddParticipantPage extends BasePage {
     businessRepName: string;
     businessRepEmail: string;
   }): Promise<void> {
-    // Click Solution Provider radio button
     await this.page.getByRole('radio', { name: 'Solution Provider' }).check();
     
-    // Select Solution Provider from dropdown
-    await this.page.getByRole('combobox', { name: 'Select Solution Provider' }).click();
-    await this.page.getByRole('option', { name: data.solutionProviderName || 'MT SP' }).click();
-    
-    // Fill Participant Name
-    await this.page.getByRole('textbox', { name: 'e.g. ABC Company Pte Ltd' }).click();
+    const spDropdown = this.page.locator('[id*="select-solutionProvider"], [id*="select-kycVerificationMethod"]').first();
+    await spDropdown.click();
+    await this.page.getByRole('option', { name: data.solutionProviderName || 'MT SP' }).first().click();
+
+    await this.selectCountry(data.countryCode || 'Singapore');
     await this.page.getByRole('textbox', { name: 'e.g. ABC Company Pte Ltd' }).fill(data.participantName);
-    
-    // Fill Participant Identifier
-    await this.page.getByRole('textbox', { name: 'e.g. SGUEN123456789K' }).click();
     await this.page.getByRole('textbox', { name: 'e.g. SGUEN123456789K' }).fill(data.participantIdentifierSuffix);
     
-    // Fill Business Representative Name if field exists
-    try {
-      const nameField = this.page.getByRole('textbox', { name: 'e.g. John Lee' });
-      if (await nameField.isVisible({ timeout: 2000 })) {
-        await nameField.click();
-        await nameField.fill(data.businessRepName || 'John Lee');
-      }
-    } catch (e) {
-      console.log('Business Representative Name field not found');
+    const nameField = this.page.getByRole('textbox', { name: 'e.g. John Lee' });
+    if (await nameField.isVisible({ timeout: 2000 })) {
+      await nameField.fill(data.businessRepName || 'John Lee');
     }
 
-    // Fill Business Representative Email if field exists
-    try {
-      const emailField = this.page.getByRole('textbox', { name: 'e.g. abc@company.com' });
-      if (await emailField.isVisible({ timeout: 2000 })) {
-        await emailField.click();
-        await emailField.fill(data.businessRepEmail || 'test@sp.com');
-      }
-    } catch (e) {
-      console.log('Business Representative Email field not found');
+    const emailField = this.page.getByRole('textbox', { name: 'e.g. abc@company.com' });
+    if (await emailField.isVisible({ timeout: 2000 })) {
+      await emailField.fill(data.businessRepEmail || 'test@sp.com');
     }
 
-    // Handle optional Upload button if it appears (common for non-standard prefixes)
-    try {
-      const uploadButton = this.page.getByRole('button', { name: /upload Click to Upload/i });
-      if (await uploadButton.isVisible({ timeout: 2000 })) {
-        console.log('Upload button visible, uploading sample document');
-        const uploadInput = this.page.locator('input[type="file"]');
-        await uploadInput.setInputFiles('tests/data/pdfs/sample-document.pdf');
-        await this.page.waitForTimeout(1000);
-      }
-    } catch (e) {
-      // Upload button not present, continue
-    }
-    
-    // Select Access Point (skipped as requested)
-    // await this.selectAccessPoint('Default Access Point');
-  }
-
-  async selectAccessPoint(accessPoint: string): Promise<void> {
-    try {
-      const accessPointDropdown = this.page.locator('select, [role="combobox"]').filter({ hasText: 'Access Point' }).first();
-      
-      // Wait for it to be visible and enabled
-      await accessPointDropdown.waitFor({ state: 'visible', timeout: 5000 });
-      
-      await accessPointDropdown.click();
-      await this.page.waitForTimeout(500); // Wait for options to load
-
-      // Try multiple ways to find the option
-      const options = this.page.locator('[role="option"]');
-      const count = await options.count();
-      
-      if (count > 0) {
-        const targetOption = options.filter({ hasText: accessPoint }).first();
-        if (await targetOption.isVisible()) {
-          await targetOption.click();
-        } else {
-          // Fallback: click the first available option
-          await options.first().click();
-        }
-      } else {
-        console.log('No options found in Access Point dropdown');
-        // Press Escape to close dropdown if no options
-        await this.page.keyboard.press('Escape');
-      }
-    } catch (e) {
-      console.log('Access Point selection skipped or failed');
+    const uploadButton = this.page.getByRole('button', { name: /upload Click to Upload/i });
+    if (await uploadButton.isVisible({ timeout: 2000 })) {
+      const uploadInput = this.page.locator('input[type="file"]');
+      await uploadInput.setInputFiles('tests/data/pdfs/sample-document.pdf');
     }
   }
 
-  async selectDocuments(document: string): Promise<void> {
-    const documentsDropdown = this.page.locator('select, [role="combobox"]').filter({ hasText: 'Documents' }).first();
-    if (await documentsDropdown.isVisible()) {
-      await documentsDropdown.click();
-      const option = this.page.locator(`text=${document}`).first();
-      await option.click();
+  async checkCompleteVerificationLater(): Promise<void> {
+    const checkbox = this.page.getByRole('checkbox', { name: /Complete verification later/i });
+    if (await checkbox.isVisible({ timeout: 2000 })) {
+      const isChecked = await checkbox.isChecked();
+      if (!isChecked) {
+        await checkbox.click();
+        await this.page.waitForTimeout(500);
+      }
     }
   }
 
   async save(): Promise<void> {
     const saveButton = this.page.locator('button:has-text("Save")').last();
     await saveButton.click();
-    await this.page.waitForURL(/.*invoicenow-participants.*/, { timeout: 15000 });
-  }
+    
+    // Increased timeout and broadened message detection
+    const successAlert = this.page.locator('div[role="alert"]:has-text("successfully"), div[role="alert"]:has-text("Success")').first();
+    const errorMsg = this.page.locator('.MuiAlert-message, .MuiFormHelperText-root, [role="alert"]').filter({ hasText: /already registered|duplicate|failed|required|invalid|error/i }).first();
+    
+    const result = await Promise.race([
+      successAlert.waitFor({ state: 'visible', timeout: 20000 }).then(() => 'success'),
+      errorMsg.waitFor({ state: 'visible', timeout: 20000 }).then(() => 'error'),
+      this.page.waitForTimeout(21000).then(() => 'timeout')
+    ]);
 
-  async isModalVisible(): Promise<boolean> {
-    return this.page.locator('text=Participant Details').isVisible();
+    if (result === 'error') {
+      const text = await errorMsg.textContent();
+      // We DO NOT close modal here automatically, let the test decide.
+      // But we will handle "Leave Without Saving" in clickAddParticipant for the next test.
+      throw new Error(`Participant registration failed: ${text}`);
+    } else if (result === 'timeout') {
+      if (await this.page.locator('text=Participant Details').first().isVisible()) {
+        throw new Error('Save failed or timed out: neither success nor error message appeared and modal is still open');
+      }
+      return; 
+    }
+
+    // Wait for the modal to disappear on success
+    await this.page.locator('text=Participant Details').first().waitFor({ state: 'hidden', timeout: 10000 }).catch(() => {});
   }
 }

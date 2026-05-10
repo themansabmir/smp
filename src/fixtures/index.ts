@@ -2,7 +2,7 @@ import { getEnvConfig } from '@config/environments';
 import type { APIRequestContext } from '@playwright/test';
 import { test as base, expect } from '@playwright/test';
 import { ApiHelper, ParticipantHelper } from '@src/helpers';
-import { AddParticipantPage, DashboardPage, LoginPage, AccessPointPage } from '@src/pages';
+import { AddParticipantPage, DashboardPage, LoginPage, AccessPointPage, ParticipantsPage } from '@src/pages';
 import type { EnvConfig, Environment } from '@src/types';
 
 type Pages = {
@@ -10,6 +10,7 @@ type Pages = {
   dashboardPage: DashboardPage;
   addParticipantPage: AddParticipantPage;
   accessPointPage: AccessPointPage;
+  participantsPage: ParticipantsPage;
 };
 
 type Helpers = {
@@ -52,6 +53,10 @@ export const test = base.extend<Fixtures>({
 
   accessPointPage: async ({ page }, use) => {
     await use(new AccessPointPage(page));
+  },
+  
+  participantsPage: async ({ page }, use) => {
+    await use(new ParticipantsPage(page));
   },
 });
 

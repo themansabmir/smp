@@ -6,11 +6,8 @@ const participants = require('@tests/data/participants.json');
 test.describe('Add Participant', () => {
   test.beforeEach(async ({ loginPage, page }) => {
     await loginPage.goto();
-    await loginPage.loginWith({
-      email: 'mansab@yopmail.com',
-      password: 'Dexsmp@009'
-    });
-    await page.waitForURL('https://dev.invoicenowsmp.sg/invoicenow-participants');
+    await loginPage.loginWith(users.admin);
+    await page.waitForURL(/.*invoicenow-participants.*/, { timeout: 30000 });
   });
 
   test('add participant with Corppass Authorisation', async ({ addParticipantPage, participantHelper, page }) => {
