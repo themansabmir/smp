@@ -1,0 +1,18 @@
+{
+  "admin": {
+    "email": "mansab@yopmail.com",
+    "password": "Dexsmp@009"
+  },
+  "owner": {
+    "email": "mansab@yopmail.com",
+    "password": "Dexsmp@009"
+  },
+  "standardUser": {
+    "email": "mansab@yopmail.com",
+    "password": "Dexsmp@009"
+  },
+  "invalid": {
+    "email": "mansab@yopmail.com",
+    "password": "InvalidPass123"
+  }
+}

@@ -9,6 +9,10 @@ blob-report/
 
 # Local env overrides — never commit
 .env
+.env.dev
+.env.example
+.end.prod
+.end.staging
 .env.local
 .env.*.local
 
@@ -18,3 +22,6 @@ playwright/.auth/*.json
 # OS
 .DS_Store
 Thumbs.db
+
+//others
+PROJECT_GUIDELINES.md

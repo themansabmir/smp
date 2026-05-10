@@ -1,8 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
-import type { Environment } from './src/types';
 import { getEnvConfig } from './config/environments';
+import type { Environment } from './src/types';
 
 // Load .env.local first (personal overrides, gitignored), then the per-env file.
 dotenv.config({ path: path.resolve(__dirname, '.env.local'), override: false });
@@ -17,7 +17,7 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 4 : undefined,
+  workers: process.env.CI ? 4 : 2,
   reporter: [
     ['html', { outputFolder: 'playwright-report', open: 'never' }],
     ['list'],
@@ -69,3 +69,4 @@ export default defineConfig({
 });
 
 export { env, TEST_ENV };
+

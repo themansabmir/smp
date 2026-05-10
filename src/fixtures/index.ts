@@ -1,18 +1,21 @@
-import { test as base, expect } from '@playwright/test';
-import type { APIRequestContext } from '@playwright/test';
-import { LoginPage, DashboardPage } from '@src/pages';
-import { ApiHelper, DataFactory } from '@src/helpers';
 import { getEnvConfig } from '@config/environments';
-import type { Environment, EnvConfig } from '@src/types';
+import type { APIRequestContext } from '@playwright/test';
+import { test as base, expect } from '@playwright/test';
+import { ApiHelper, ParticipantHelper } from '@src/helpers';
+import { AddParticipantPage, DashboardPage, LoginPage, AccessPointPage, ParticipantsPage } from '@src/pages';
+import type { EnvConfig, Environment } from '@src/types';
 
 type Pages = {
   loginPage: LoginPage;
   dashboardPage: DashboardPage;
+  addParticipantPage: AddParticipantPage;
+  accessPointPage: AccessPointPage;
+  participantsPage: ParticipantsPage;
 };
 
 type Helpers = {
   apiHelper: ApiHelper;
-  dataFactory: typeof DataFactory;
+  participantHelper: ParticipantHelper;
 };
 
 type Config = {
@@ -36,13 +39,26 @@ export const test = base.extend<Fixtures>({
     await use(new DashboardPage(page));
   },
 
+  addParticipantPage: async ({ page }, use) => {
+    await use(new AddParticipantPage(page));
+  },
+
   apiHelper: async ({ request, envConfig }, use) => {
     await use(new ApiHelper(request as APIRequestContext, envConfig.apiBaseURL, envConfig.api.key));
   },
 
-  dataFactory: async ({}, use) => {
-    await use(DataFactory);
+  participantHelper: async ({ request, envConfig, page }, use) => {
+    await use(new ParticipantHelper(request as APIRequestContext, envConfig.apiBaseURL, page));
+  },
+
+  accessPointPage: async ({ page }, use) => {
+    await use(new AccessPointPage(page));
+  },
+  
+  participantsPage: async ({ page }, use) => {
+    await use(new ParticipantsPage(page));
   },
 });
 
 export { expect };
+
